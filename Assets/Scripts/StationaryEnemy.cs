@@ -32,8 +32,9 @@ public class StationaryEnemy : Enemy {
 
         // CONDITION 1
         /* If the player is not in the enemy's territory, then the state should
-         * be set to IDLE1. */
-        if (!IsPlayerInTerritory())
+         * be set to IDLE1 if the enemy is still alive. */
+        if (!IsPlayerInTerritory() && (GetState() != EnemyState.DYING)
+            && GetState() != EnemyState.DYING)
         {
             SetState(EnemyState.IDLE1);
         }

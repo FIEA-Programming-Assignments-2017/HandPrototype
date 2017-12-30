@@ -37,8 +37,9 @@ public class MovingEnemy : Enemy {
 
         // CONDITION 1
         /* If the player is not in the enemy's territory, then the state should
-         * be set to IDLE1. */
-        if (!IsPlayerInTerritory())
+         * be set to IDLE1 if the enemy is still alive. */
+        if (!IsPlayerInTerritory() && (GetState() != EnemyState.DYING)
+            && GetState() != EnemyState.DYING)
         {
             SetState(EnemyState.IDLE1);
         }
@@ -107,7 +108,7 @@ public class MovingEnemy : Enemy {
         if ((health <= 0) && (GetState() != EnemyState.DYING) && 
             (GetState() != EnemyState.DEAD))
         {
-            Debug.Log("Moving enemy is dying now.");//DEBUG
+            //Debug.Log("Moving enemy is dying now.");//DEBUG
             SetState(EnemyState.DYING);
             SetDeathTime();
         }
@@ -116,6 +117,11 @@ public class MovingEnemy : Enemy {
         /* If the enemy's state is DYING, and the dying animation has finished,
          * then we should change the enemy's state to DEAD and disable the
          * enemy's game object. */
+        if (GetState() == EnemyState.DYING)
+        {
+            Debug.Log(Time.timeSinceLevelLoad + ", " + GetDeathTime());//DEBUG
+        }
+        
         if ((GetState() == EnemyState.DYING) &&
             (Time.timeSinceLevelLoad - GetDeathTime() > durationOfDeath))
         {
