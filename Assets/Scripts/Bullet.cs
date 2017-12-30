@@ -9,6 +9,7 @@ public class Bullet : MonoBehaviour {
 
     private Vector3 StartPos;
     private const float Speed = .5f;
+    private const int damageDealt = 1;
 
     private void Start()
     {
@@ -38,10 +39,20 @@ public class Bullet : MonoBehaviour {
         if (other.tag == "Targetable")
         {
             Destroy(other.gameObject);
+            Destroy(this.gameObject);
         }
 
-        Destroy(this.gameObject);
+    }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        GameObject otherGO = collision.gameObject;
+        if (otherGO.tag == "Enemy")
+        {
+            Enemy enemyObject = otherGO.GetComponent<Enemy>();
+            enemyObject.DecreaseHealth(damageDealt);
+        }
+        Destroy(this.gameObject);
     }
 
 }

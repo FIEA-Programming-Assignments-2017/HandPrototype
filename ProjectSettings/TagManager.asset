@@ -8,6 +8,7 @@ TagManager:
   - Throwable
   - Grabbable
   - Targetable
+  - Enemy
   layers:
   - Default
   - TransparentFX
