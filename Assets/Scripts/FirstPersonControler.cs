@@ -247,6 +247,17 @@ public class FirstPersonControler : MonoBehaviour {
          yield return new WaitForSeconds(.25f);
         Firing = false;
     }
+    /* Written by Peter; quick way to get stationary enemy to fire bullets */
+    public static IEnumerator ShootingBullet(GameObject MovingTo, StationaryEnemy self)
+    {
+        self.SetFiring(true);
+        GameObject projectile = Instantiate(self.bullet, self.transform.position, Quaternion.identity) as GameObject;
+        //projectile.GetComponent<Bullet>().MovinToObj = MovingTo;
+        projectile.transform.parent = self.gameObject.transform;
+        projectile.GetComponent<Bullet>().MovinTo = (MovingTo.transform.position - self.transform.position) * 1000;
+        yield return new WaitForSeconds(.25f);
+        self.SetFiring(false);
+    }
     IEnumerator ShootingBullet()
     {
         Firing = true;

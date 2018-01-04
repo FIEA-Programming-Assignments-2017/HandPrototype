@@ -47,12 +47,15 @@ public class Bullet : MonoBehaviour {
     private void OnCollisionEnter(Collision collision)
     {
         GameObject otherGO = collision.gameObject;
-        if (otherGO.tag == "Enemy")
+        if (otherGO.CompareTag("Enemy") && (!transform.parent.CompareTag("Enemy")))
         {
             Enemy enemyObject = otherGO.GetComponent<Enemy>();
             enemyObject.DecreaseHealth(damageDealt);
         }
-        Destroy(this.gameObject);
+        if (!transform.parent.CompareTag("Enemy"))
+        {
+            Destroy(this.gameObject);
+        }
     }
 
 }

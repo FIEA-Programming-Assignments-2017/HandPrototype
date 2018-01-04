@@ -15,8 +15,16 @@ public class StationaryEnemy : Enemy {
 
     public Vector2[] attackPositions;
 
+    public GameObject bullet;
+
     private int indexOfNextPosition = 0;
+    private bool firing = false;
     
+    public void SetFiring(bool isFiring)
+    {
+        firing = isFiring;
+    }
+
     /* Function:    Update
      * Description: This function is called once per frame. For the class
      *              StationaryEnemy, the update function acts as a finite state
@@ -60,6 +68,7 @@ public class StationaryEnemy : Enemy {
                     transform.position = new Vector3(attackPositions[indexOfNextPosition].x,
                         transform.position.y, attackPositions[indexOfNextPosition].y);
                     SetState(EnemyState.ATTACKING);
+                    StartCoroutine(FirstPersonControler.ShootingBullet(GameObject.FindGameObjectWithTag("Player"), this));
                     SetLastAttackTime();
                     indexOfNextPosition = (indexOfNextPosition + 1) % attackPositions.Length;
                 }

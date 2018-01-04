@@ -6,6 +6,7 @@ public class Enemy : MonoBehaviour {
     public enum EnemyState { IDLE1 = 0, IDLE2, MOVING, ATTACKING, CELEBRATING, DYING, DEAD };
     public float durationOfAttack;
     public float durationOfDeath;
+    public float durationOfCelebration;
     public float movementSpeed;
     public float hitDuration;
     public int health;
@@ -71,6 +72,16 @@ public class Enemy : MonoBehaviour {
     public void SetDeathTime()
     {
         deathTime = Time.timeSinceLevelLoad;
+    }
+
+    public float GetCelebrationTime()
+    {
+        return lastCelebrationTime;
+    }
+
+    public void SetCelebrationTime()
+    {
+        lastCelebrationTime = Time.timeSinceLevelLoad;
     }
 
     public void setPlayerIsInTerritory(bool input)

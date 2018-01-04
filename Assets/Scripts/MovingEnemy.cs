@@ -5,8 +5,10 @@ using UnityEngine;
 public class MovingEnemy : Enemy {
 
     private GameObject player;
+    private GameObject attackBox;
 
     public float distanceFromPlayerToAttack;
+    public float distanceBetweenEnemyAndAttack;
 
     public bool IsEnemyCloseEnoughToAttack()
     {
@@ -20,6 +22,7 @@ public class MovingEnemy : Enemy {
     {
         base.Start();
         player = GameObject.FindGameObjectWithTag("Player");
+        attackBox = GameObject.Find("Moving Enemy Attack Box");
     }
 
     /* Function:    Update
@@ -37,9 +40,10 @@ public class MovingEnemy : Enemy {
 
         // CONDITION 1
         /* If the player is not in the enemy's territory, then the state should
-         * be set to IDLE1 if the enemy is still alive. */
+         * be set to IDLE1 if the enemy is still alive and not otherwise
+         * occupied. */
         if (!IsPlayerInTerritory() && (GetState() != EnemyState.DYING)
-            && GetState() != EnemyState.DYING)
+            && (GetState() != EnemyState.DYING) && (GetState() != EnemyState.CELEBRATING))
         {
             SetState(EnemyState.IDLE1);
         }
@@ -47,11 +51,21 @@ public class MovingEnemy : Enemy {
         // CONDITION 2
         /* If the player is in the enemy's territory, then it should either (a)
          * move in the player's direction, or (b) attack the player, assuming
-         * it's not already in the process of attacking or dying. */
+         * it's not already in the process of attacking, dying, or celebrating. */
         if (IsPlayerInTerritory())
         {
-            /* If the enemy is already dying or dead, do nothing. */
-            if (GetState() == EnemyState.DYING || GetState() == EnemyState.DEAD)
+            /* Before we do anything else, let's calculate the vector from the
+             * enemy to the player, which is used heavily in this branch of the
+             * function. */
+            Vector2 playerPosition = new Vector2(player.transform.position.x, player.transform.position.z);
+            Vector2 enemyPosition = new Vector2(transform.position.x, transform.position.z);
+            Vector2 enemyToPlayer2D = playerPosition - enemyPosition;
+            Vector3 enemyToPlayer3D = new Vector3(enemyToPlayer2D.x, 0.0f, enemyToPlayer2D.y);
+            enemyToPlayer3D = Vector3.Normalize(enemyToPlayer3D);
+
+            /* If the enemy is already celebrating, dying, or dead, do nothing. */
+            if (GetState() == EnemyState.DYING || GetState() == EnemyState.DEAD
+                || GetState() == EnemyState.CELEBRATING)
             {
 
             }
@@ -62,27 +76,57 @@ public class MovingEnemy : Enemy {
                 SetState(EnemyState.MOVING);
             }
             /* If the enemy is close enough to the player to mount an attack,
-             * and it's not currently attacking, attack! */
-            else if (IsEnemyCloseEnoughToAttack())
+             * and it's not currently attacking, attack! Figure out where to
+             * position the attack box and activate its trigger. */
+            else if (IsEnemyCloseEnoughToAttack() && (GetState() == EnemyState.MOVING
+                || GetState() == EnemyState.ATTACKING || GetState() == EnemyState.IDLE1))
             {
                 if (GetState() != EnemyState.ATTACKING)
                 {
                     SetState(EnemyState.ATTACKING);
                     SetLastAttackTime();
+
+                    attackBox.GetComponent<Collider>().enabled = true;
+                    //attackBox.GetComponent<MeshRenderer>().enabled = true;//test
+                    enemyToPlayer3D *= distanceBetweenEnemyAndAttack;
+                    attackBox.transform.position = transform.position + enemyToPlayer3D;
+                }
+                else
+                /* If the enemy IS currently attacking, then it should check to
+                 * see if its most recent attack was successful. If it was,
+                 * then the enemy should start celebrating, if the enemy is
+                 * designed to do that. */
+                {
+                    EnemyMeleeAttack attack = attackBox.GetComponent<EnemyMeleeAttack>();
+                    if (attack.wasAttackSuccessful())
+                    {
+                        Debug.Log("Enemy hit player.");//DEBUG
+                        if (shouldCelebrate)
+                        {
+                            SetState(EnemyState.CELEBRATING);
+                            Debug.Log("Celebrating now!");//DEBUG
+                            SetCelebrationTime();
+                        }
+                    }
                 }
             }
             /* If the player is in the enemy's territory, and all else fails,
              * the enemy just keeps moving toward the player. */
             else
-            {
-                Vector2 playerPosition = new Vector2(player.transform.position.x, player.transform.position.z);
-                Vector2 enemyPosition = new Vector2(transform.position.x, transform.position.z);
-                Vector2 enemyToPlayer2D = playerPosition - enemyPosition;
-                Vector3 enemyToPlayer3D = new Vector3(enemyToPlayer2D.x, 0.0f, enemyToPlayer2D.y);
-                enemyToPlayer3D = Vector3.Normalize(enemyToPlayer3D);
+            {  
                 enemyToPlayer3D *= movementSpeed;
                 transform.position += enemyToPlayer3D;
+                SetState(EnemyState.MOVING);
             }
+        }
+
+        /* If the enemy is currently celebrating, and its celebration has
+         * finished, then reset its state. */
+        if ((GetState() == EnemyState.CELEBRATING) &&
+            (Time.timeSinceLevelLoad - GetCelebrationTime() > durationOfCelebration))
+        {
+            SetState(EnemyState.IDLE1);
+            Debug.Log("Celebration is over now.");//DEBUG
         }
 
         // CONDITION 3
@@ -108,7 +152,6 @@ public class MovingEnemy : Enemy {
         if ((health <= 0) && (GetState() != EnemyState.DYING) && 
             (GetState() != EnemyState.DEAD))
         {
-            //Debug.Log("Moving enemy is dying now.");//DEBUG
             SetState(EnemyState.DYING);
             SetDeathTime();
         }
@@ -117,10 +160,10 @@ public class MovingEnemy : Enemy {
         /* If the enemy's state is DYING, and the dying animation has finished,
          * then we should change the enemy's state to DEAD and disable the
          * enemy's game object. */
-        if (GetState() == EnemyState.DYING)
+       /* if (GetState() == EnemyState.DYING)
         {
             Debug.Log(Time.timeSinceLevelLoad + ", " + GetDeathTime());//DEBUG
-        }
+        }*/
         
         if ((GetState() == EnemyState.DYING) &&
             (Time.timeSinceLevelLoad - GetDeathTime() > durationOfDeath))
